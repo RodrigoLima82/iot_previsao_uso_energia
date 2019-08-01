@@ -401,17 +401,8 @@ splits2 <- createDataPartition(df2$Appliances, p=0.7, list=FALSE)
 dados_treino2 <- df2[ splits2,]
 dados_teste2 <- df2[-splits2,]
 
-xgbGrid <- expand.grid(nrounds = 200,
-                       max_depth = 25,
-                       colsample_bytree = 0.5,
-                       eta = 0.1,
-                       gamma=0,
-                       min_child_weight = 1,
-                       subsample = 1
-)
-
 # Treinando o modelo com os melhores parametros
-xgb_model2 <- train(formula, data=dados_treino2, method="xgbTree", trControl=xgb_trcontrol, tuneGrid=xgbGrid)
+xgb_model2 <- train(formula, data=dados_treino2, method="xgbTree", trControl=xgb_trcontrol, xgb_model$bestTune)
 
 # Resultado do modelo
 print(xgb_model2)
