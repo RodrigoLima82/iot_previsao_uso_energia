@@ -1,6 +1,7 @@
 # --------------------------------------------------------------------
 # 01 - Iniciando o script de Machine Learning
 # --------------------------------------------------------------------
+options(warn=-1)
 
 # Carregando o Dataset
 dfTrain <- read.csv("data/train.csv")
@@ -377,6 +378,7 @@ ggplot(dfPrevisoes,aes(predicted, observed)) +
 # Conforme identificado na analise exploratoria, 2.138 registros sao outliers
 # Vamos remover esses 10% e analisar a performance do modelo
 df2 <- rbind(dfTrain,dfTest)
+outliers <- boxplot(df2$Appliances, plot=FALSE)$out
 df2 <- df2[-which(df2$Appliances %in% outliers),]
 boxplot(df2$Appliances)
 
@@ -396,23 +398,33 @@ df2$date <- NULL
 
 # Gerando dados de treino e de teste
 splits2 <- createDataPartition(df2$Appliances, p=0.7, list=FALSE)
-dados_treino2 <- df[ splits2,]
-dados_teste2 <- df[-splits2,]
+dados_treino2 <- df2[ splits2,]
+dados_teste2 <- df2[-splits2,]
+
+xgbGrid <- expand.grid(nrounds = 200,
+                       max_depth = 25,
+                       colsample_bytree = 0.5,
+                       eta = 0.1,
+                       gamma=0,
+                       min_child_weight = 1,
+                       subsample = 1
+)
 
 # Treinando o modelo com os melhores parametros
-xgb_model2 <- train(formula, data=dados_treino2, method="xgbTree", trControl=xgb_trcontrol, tuneGrid=xgb_model$bestTune)
+xgb_model2 <- train(formula, data=dados_treino2, method="xgbTree", trControl=xgb_trcontrol, tuneGrid=xgbGrid)
 
 # Resultado do modelo
 print(xgb_model2)
 
 # Observacoes da Performance no modelo XGBoost Otimizado (dados de treino s/ outliers)
 # --------------------------------------------------------------------
-# RMSE=69.01 e R_squared=0.55
+# RMSE=15.92 e R_squared=0.688
 
 
 # Conclusao Final
 # --------------------------------------------------------------------
 # O melhor algoritmo para esse dataset é o eXtreme Gradient Boosting
 # O modelo otimizado e sem tratamento de outliers foi capaz de explicar 61% da variancia nos dados de teste
-# Realizando a remocao de outliers no dataset, nao houve melhora significativa na performance do modelo
+# Realizando a remocao de outliers no dataset, obtive uma performance de 69%, havendo melhora 
 # O ideal agora seria obter mais dados para aumentar a performance do modelo
+# Avaliar tambem a frequencia de outliers nos novos dados para verificar os motivos
